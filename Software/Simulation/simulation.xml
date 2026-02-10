@@ -1,0 +1,238 @@
+<mujoco model="arm">
+  <compiler meshdir="meshes" angle="degree"/>
+  <option timestep="0.002" gravity="0 0 -9.81"/>
+
+  <asset>
+    <mesh name="Shoulder" file="Shoulder.STL" scale="0.001 0.001 0.001"/>
+    <mesh name="Bicep"    file="Bicep.STL"    scale="0.001 0.001 0.001"/>
+    <mesh name="Elbow"    file="Elbow.STL"    scale="0.001 0.001 0.001"/>
+    <mesh name="Forearm"  file="Forearm.STL"  scale="0.001 0.001 0.001" refpos="0 0 0.0"/>
+    <mesh name="Palm"     file="Palm.STL"     scale="0.001 0.001 0.001"/>
+    <mesh name="Palm2"    file="Palm2.STL"    scale="0.001 0.001 0.001"/>
+    <mesh name="Pointer1" file="Pointer1.STL" scale="0.001 0.001 0.001"/>
+    <mesh name="Pointer2" file="Pointer2.STL" scale="0.001 0.001 0.001"/>
+    <mesh name="Pointer3" file="Pointer3.STL" scale="0.001 0.001 0.001"/>
+    <mesh name="Thumb1" file="Thumb1.STL" scale="0.001 0.001 0.001"/>
+    <mesh name="Thumb2" file="Thumb2.STL" scale="0.001 0.001 0.001"/>
+  </asset>
+
+  <worldbody>
+    <body name="base" pos="0 0 0">
+      <geom type="mesh" mesh="Shoulder" density="1000"/>
+
+      <body name="link1" pos="-0.25 -0.1 -0.07">
+        <joint name="joint1" type="hinge" pos="0 0 0" axis="0 0 1" range="-35 40" damping="1"/>
+
+        <geom name="joint1_marker" type="sphere" pos="0 0 0" size="0.015" contype="0" conaffinity="0"/>
+
+        <geom name="link1_vis" type="mesh" mesh="Bicep"
+              contype="0" conaffinity="0"
+              pos="0.24 0.145 0.07"
+              euler="0 0 10.305"/>
+
+        <body name="link2" pos="0.23 0.0344 -0.038" gravcomp="1">
+          <joint name="joint2" type="hinge" pos="0 0 0" axis="0 1 0" range="-35 40" damping="1"/>
+
+          <geom name="joint2_marker" type="sphere" pos="0 0 0" size="0.015" rgba="0 0 0 0" contype="0" conaffinity="0"/>
+
+          <geom name="link2_vis" type="mesh" mesh="Elbow"
+                contype="0" conaffinity="0"
+                pos="0.03 0.11 0.11"
+                euler="0 0 0"/>
+
+          <body name="link3" pos="0 0 0" euler="0 0 11" gravcomp="1">
+            <joint name="joint3" type="hinge" pos="0 0 0" axis="1 0 0" range="-90 90" damping="1" armature="0.01"/>
+
+            <geom name="joint3_marker" type="sphere" pos="0 0 0" size="0.012" contype="0" conaffinity="0"/>
+
+            <geom type="mesh" mesh="Forearm" contype="0" conaffinity="0"
+                  pos="0.03 0.1 0.11"
+                  euler="0 0 0"/>
+
+            <body name="link4" pos="0.28 0 0" gravcomp="1">
+              <geom name="joint4_marker" type="sphere" pos="0 0 0" size="0.015" rgba="0 0 0 0" contype="0" conaffinity="0"/>
+
+              <geom name="link4_vis" type="mesh" mesh="Palm"
+                    contype="0" conaffinity="0"
+                    pos="-0.242 0.214 0.049"
+                    euler="0 0 0"/>
+
+              <!-- ONLY Palm2 + thumb are children of link5 (so joint4_motor only rotates them) -->
+              <body name="link5" pos="0 0.007 -0.005" gravcomp="1">
+                <joint name="joint5" type="hinge" pos="0 0 0" axis="1 0 0" range="-35 40" damping="1"/>
+                <geom name="joint5_marker" type="capsule" pos="0 0.025 0" size="0.004 0.02" euler="90 0 0" rgba="0 1 0 1" contype="0" conaffinity="0"/>
+                <geom type="mesh" mesh="Palm2" contype="0" conaffinity="0" pos="-0.242 0.207 0.055" euler="0 0 0"/>
+
+                <!-- ===================== THUMB (attached to Palm2) ===================== -->
+                <body name="flink9" pos="0 0.035 0" gravcomp="1" euler="90 0 0">
+                  <joint name="fjoint9" type="hinge" pos="0 0 0" axis="0 1 0" range="0 40" limited="true" damping="1"/>
+                  <geom name="fjoint9_marker" type="capsule" pos="0.01 0.0 -0.02" size="0.004 0.01" euler="0 0 0" rgba="0 1 0 1" contype="0" conaffinity="0"/>
+                  <geom type="mesh" mesh="Thumb1" contype="0" conaffinity="0" pos="-0.255 0.12 -0.059" euler="-90 0 0"/>
+
+                  <body name="flink10" pos="0.027 0 0" gravcomp="1">
+                    <joint name="fjoint10" type="hinge" pos="0 0 0" axis="0 1 0" range="0 20" limited="true" damping="1"/>
+                    <geom name="fjoint10_marker" type="capsule" pos="0.01 0 0" size="0.004 0.01" euler="0 0 0" rgba="0 0 0 0" contype="0" conaffinity="0"/>
+                    <geom type="mesh" mesh="Thumb2" contype="0" conaffinity="0" pos="-0.283 0.12 -0.058" euler="-90 0 0"/>
+                  </body>
+                </body>
+              </body> <!-- end link5 -->
+
+              <!-- Fingers are now siblings of link5 (so they do NOT rotate with joint4_motor) -->
+
+              <!-- ===================== FINGER 1 (index) ===================== -->
+              <body name="link6" pos="0.075 0.03 -0.007" gravcomp="1" euler="0 0 0">
+                <joint name="joint6" type="hinge" pos="0 0 0" axis="0 1 0" range="0 20" limited="true" damping="1"/>
+                <geom name="joint6_marker" type="capsule" pos="0.01 0 0" size="0.004 0.01" euler="90 90 0" rgba="0 1 0 1" contype="0" conaffinity="0"/>
+                <geom type="mesh" mesh="Pointer1" contype="0" conaffinity="0" pos="-0.319 0.182 0.055" euler="0 0 0"/>
+
+                <body name="link7" pos="0.027 0 0" gravcomp="1">
+                  <joint name="joint7" type="hinge" pos="0 0 0" axis="0 1 0" range="0 20" limited="true" damping="1"/>
+                  <geom name="joint7_marker" type="capsule" pos="0.01 0 0" size="0.004 0.01" euler="90 90 0" rgba="0 0 0 0" contype="0" conaffinity="0"/>
+                  <geom type="mesh" mesh="Pointer2" contype="0" conaffinity="0" pos="-0.347 0.1815 0.055" euler="0 0 0"/>
+
+                  <body name="link8" pos="0.027 0 0" gravcomp="1">
+                    <joint name="joint8" type="hinge" pos="0 0 0" axis="0 1 0" range="0 20" limited="true" damping="1"/>
+                    <geom name="joint8_marker" type="capsule" pos="0.01 0 0" size="0.004 0.01" euler="90 90 0" rgba="0 0 0 0" contype="0" conaffinity="0"/>
+                    <geom type="mesh" mesh="Pointer3" contype="0" conaffinity="0" pos="-0.383 0.0685 0.117" euler="0 0 0"/>
+                  </body>
+                </body>
+              </body>
+
+              <!-- ===================== FINGER 2 ===================== -->
+              <body name="link9" pos="0.075 0.009 -0.006" gravcomp="1" euler="0 0 -10">
+                <joint name="joint9" type="hinge" pos="0 0 0" axis="0 1 0" range="0 20" limited="true" damping="1"/>
+                <geom name="joint9_marker" type="capsule" pos="0.01 0 0" size="0.004 0.01" euler="90 90 0" rgba="0 0 0 0" contype="0" conaffinity="0"/>
+                <geom type="mesh" mesh="Pointer1" contype="0" conaffinity="0" pos="-0.319 0.182 0.055" euler="0 0 0"/>
+
+                <body name="link10" pos="0.027 0 0" gravcomp="1">
+                  <joint name="joint10" type="hinge" pos="0 0 0" axis="0 1 0" range="0 20" limited="true" damping="1"/>
+                  <geom name="joint10_marker" type="capsule" pos="0.01 0 0" size="0.004 0.01" euler="90 90 0" rgba="0 0 0 0" contype="0" conaffinity="0"/>
+                  <geom type="mesh" mesh="Pointer2" contype="0" conaffinity="0" pos="-0.347 0.1815 0.055" euler="0 0 0"/>
+
+                  <body name="link11" pos="0.027 0 0" gravcomp="1">
+                    <joint name="joint11" type="hinge" pos="0 0 0" axis="0 1 0" range="0 20" limited="true" damping="1"/>
+                    <geom name="joint11_marker" type="capsule" pos="0.01 0 0" size="0.004 0.01" euler="90 90 0" rgba="0 0 0 0" contype="0" conaffinity="0"/>
+                    <geom type="mesh" mesh="Pointer3" contype="0" conaffinity="0" pos="-0.383 0.0685 0.117" euler="0 0 0"/>
+                  </body>
+                </body>
+              </body>
+
+              <!-- ===================== FINGER 3 ===================== -->
+              <body name="link12" pos="0.074 -0.012 -0.005" gravcomp="1" euler="0 0 -15">
+                <joint name="joint12" type="hinge" pos="0 0 0" axis="0 1 0" range="0 20" limited="true" damping="1"/>
+                <geom name="joint12_marker" type="capsule" pos="0.01 0 0" size="0.004 0.01" euler="90 90 0" rgba="0 0 0 0" contype="0" conaffinity="0"/>
+                <geom type="mesh" mesh="Pointer1" contype="0" conaffinity="0" pos="-0.319 0.182 0.055" euler="0 0 0"/>
+
+                <body name="link13" pos="0.027 0 0" gravcomp="1">
+                  <joint name="joint13" type="hinge" pos="0 0 0" axis="0 1 0" range="0 20" limited="true" damping="1"/>
+                  <geom name="joint13_marker" type="capsule" pos="0.01 0 0" size="0.004 0.01" euler="90 90 0" rgba="0 0 0 0" contype="0" conaffinity="0"/>
+                  <geom type="mesh" mesh="Pointer2" contype="0" conaffinity="0" pos="-0.347 0.1815 0.055" euler="0 0 0"/>
+
+                  <body name="link14" pos="0.027 0 0" gravcomp="1">
+                    <joint name="joint14" type="hinge" pos="0 0 0" axis="0 1 0" range="0 20" limited="true" damping="1"/>
+                    <geom name="joint14_marker" type="capsule" pos="0.01 0 0" size="0.004 0.01" euler="90 90 0" rgba="0 0 0 0" contype="0" conaffinity="0"/>
+                    <geom type="mesh" mesh="Pointer3" contype="0" conaffinity="0" pos="-0.383 0.0685 0.117" euler="0 0 0"/>
+                  </body>
+                </body>
+              </body>
+
+              <!-- ===================== FINGER 4 ===================== -->
+              <body name="link15" pos="0.067 -0.033 -0.005" gravcomp="1" euler="0 0 -25">
+                <joint name="joint15" type="hinge" pos="0 0 0" axis="0 1 0" range="0 20" limited="true" damping="1"/>
+                <geom name="joint15_marker" type="capsule" pos="0.01 0 0" size="0.004 0.01" euler="90 90 0" rgba="0 0 0 0" contype="0" conaffinity="0"/>
+                <geom type="mesh" mesh="Pointer1" contype="0" conaffinity="0" pos="-0.319 0.182 0.055" euler="0 0 0"/>
+
+                <body name="link16" pos="0.027 0 0" gravcomp="1">
+                  <joint name="joint16" type="hinge" pos="0 0 0" axis="0 1 0" range="0 20" limited="true" damping="1"/>
+                  <geom name="joint16_marker" type="capsule" pos="0.01 0 0" size="0.004 0.01" euler="90 90 0" rgba="0 0 0 0" contype="0" conaffinity="0"/>
+                  <geom type="mesh" mesh="Pointer2" contype="0" conaffinity="0" pos="-0.347 0.1815 0.055" euler="0 0 0"/>
+
+                  <body name="link17" pos="0.027 0 0" gravcomp="1">
+                    <joint name="joint17" type="hinge" pos="0 0 0" axis="0 1 0" range="0 20" limited="true" damping="1"/>
+                    <geom name="joint17_marker" type="capsule" pos="0.01 0 0" size="0.004 0.01" euler="90 90 0" rgba="0 0 0 0" contype="0" conaffinity="0"/>
+                    <geom type="mesh" mesh="Pointer3" contype="0" conaffinity="0" pos="-0.383 0.0685 0.117" euler="0 0 0"/>
+                  </body>
+                </body>
+              </body>
+
+            </body>        <!-- end link4 -->
+          </body>          <!-- end link3 -->
+        </body>            <!-- end link2 -->
+      </body>              <!-- end link1 -->
+    </body>                <!-- end base -->
+  </worldbody>
+
+  <!-- Tendons: coef 1/3 so tendon value ~= joint angle when joints are coupled -->
+  <tendon>
+    <fixed name="finger1">
+      <joint joint="joint6"  coef="0.333333"/>
+      <joint joint="joint7"  coef="0.333333"/>
+    </fixed>
+
+    <fixed name="finger2">
+      <joint joint="joint9"  coef="0.333333"/>
+      <joint joint="joint10" coef="0.333333"/>
+    </fixed>
+
+    <fixed name="finger3">
+      <joint joint="joint12" coef="0.333333"/>
+      <joint joint="joint13" coef="0.333333"/>
+    </fixed>
+
+    <fixed name="finger4">
+      <joint joint="joint15" coef="0.333333"/>
+      <joint joint="joint16" coef="0.333333"/>
+    </fixed>
+
+    <fixed name="thumb">
+      <joint joint="fjoint9" coef="0.333333"/>
+    </fixed>
+  </tendon>
+
+  <!-- Couple each finger's joints so all 3 segments bend together -->
+  <equality>
+    <!-- finger1 -->
+    <joint name="j6_j7_couple"  joint1="joint6"  joint2="joint7"  polycoef="0 1 0 0 0"/>
+    <joint name="j7_j8_couple"  joint1="joint7"  joint2="joint8"  polycoef="0 1 0 0 0"/>
+
+    <!-- finger2 -->
+    <joint name="j9_j10_couple" joint1="joint9"  joint2="joint10" polycoef="0 1 0 0 0"/>
+    <joint name="j10_j11_couple" joint1="joint10" joint2="joint11" polycoef="0 1 0 0 0"/>
+
+    <!-- finger3 -->
+    <joint name="j12_j13_couple" joint1="joint12" joint2="joint13" polycoef="0 1 0 0 0"/>
+    <joint name="j13_j14_couple" joint1="joint13" joint2="joint14" polycoef="0 1 0 0 0"/>
+
+    <!-- finger4 -->
+    <joint name="j15_j16_couple" joint1="joint15" joint2="joint16" polycoef="0 1 0 0 0"/>
+    <joint name="j16_j17_couple" joint1="joint16" joint2="joint17" polycoef="0 1 0 0 0"/>
+  </equality>
+
+  <actuator>
+    <motor joint="joint1" gear="1" ctrlrange="-10 10" ctrllimited="true" forcerange="-1.5 1.5" forcelimited="true"/>/>
+    <motor joint="joint2" gear="5"/>
+    <motor name="joint3_motor" joint="joint3" gear="1"/>
+    <motor name="joint4_motor" joint="joint5" gear="1" ctrlrange="-0.2 1.5" ctrllimited="true" forcerange="-1.5 1.5" forcelimited="true"/>
+
+    <!-- Tendon position actuators (ctrl limited properly) -->
+    <position name="finger1_pos" tendon="finger1" kp="5"
+              ctrlrange="-1 0" ctrllimited="true"
+              forcerange="-1.5 1.5" forcelimited="true"/>
+
+    <position name="finger2_pos" tendon="finger2" kp="5"
+              ctrlrange="-1 0" ctrllimited="true"
+              forcerange="-1.5 1.5" forcelimited="true"/>
+
+    <position name="finger3_pos" tendon="finger3" kp="5"
+              ctrlrange="-1 0" ctrllimited="true"
+              forcerange="-1.5 1.5" forcelimited="true"/>
+
+    <position name="finger4_pos" tendon="finger4" kp="5"
+              ctrlrange="-1 0" ctrllimited="true"
+              forcerange="-1.5 1.5" forcelimited="true"/>
+
+    <position name="thumb_pos" tendon="thumb" kp="5"
+              ctrlrange="-0.3 0" ctrllimited="true"
+              forcerange="-2.5 1.5" forcelimited="true"/>
+  </actuator>
+</mujoco>
