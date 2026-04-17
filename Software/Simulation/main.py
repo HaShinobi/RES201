@@ -1,56 +1,49 @@
 import time
 import serial
-
 import mujoco
 import mujoco.viewer
 
-
-# ---------- USER SETTINGS ----------
 XML_PATH = "simulation.xml"
-
-# Windows example: "COM4"
-# macOS example: "/dev/tty.usbmodemXXXX"
-# Linux example: "/dev/ttyACM0"
-SERIAL_PORT = "COM8"
+SERIAL_PORT = "COM7"
 BAUD = 115200
-
-SEND_HZ = 100           # how often we send slider values
-DEADBAND = 0.002        # ignore tiny slider changes (0..1 scale)
-# ----------------------------------
-
+SEND_HZ = 100
+DEADBAND = 0.002
+NUM_MOTORS = 9
 
 def main():
     model = mujoco.MjModel.from_xml_path(XML_PATH)
     data = mujoco.MjData(model)
 
-    # Open serial to Arduino
     ser = serial.Serial(SERIAL_PORT, BAUD, timeout=0)
-    time.sleep(2.0)  # Arduino resets when serial opens
+    time.sleep(2.0)
 
     dt = 1.0 / SEND_HZ
     next_send = time.time()
-
     last_u_sent = None
 
     with mujoco.viewer.launch_passive(model, data) as viewer:
         while viewer.is_running():
-            mujoco.mj_step(model, data)
+            viewer.sync()
 
-            # Slider value for actuator 0 (ensure your actuator ctrlrange is 0..1)
-            u = float(data.ctrl[0])
+            u_vals = [float(data.ctrl[i]) for i in range(NUM_MOTORS)]
 
             now = time.time()
             if now >= next_send:
-                if (last_u_sent is None) or (abs(u - last_u_sent) > DEADBAND):
-                    msg = f"{u:.4f}\n"
+                should_send = (
+                    last_u_sent is None or
+                    any(abs(u_vals[i] - last_u_sent[i]) > DEADBAND for i in range(NUM_MOTORS))
+                )
+
+                if should_send:
+                    msg = ",".join(f"{u:.4f}" for u in u_vals) + "\n"
                     ser.write(msg.encode("ascii"))
-                    last_u_sent = u
+                    last_u_sent = u_vals.copy()
+
                 next_send += dt
 
-            viewer.sync()
+            mujoco.mj_step(model, data)
 
     ser.close()
-
 
 if __name__ == "__main__":
     main()
